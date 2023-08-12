@@ -35,7 +35,6 @@ public class BootstrapData implements CommandLineRunner
     @Transactional
     @Override
     public void run(String... args) throws Exception {
-//        loadWordData();
         loadCsvData();
         loadDictionaryData();
 
@@ -43,62 +42,66 @@ public class BootstrapData implements CommandLineRunner
 
     private void loadDictionaryData() {
 
-        Dictionary dictionary1 = Dictionary.builder()
+        if (dictionaryRepository.count() == 0) {
+            Dictionary dictionary1 = Dictionary.builder()
                     .id(UUID.randomUUID())
                     .name("Dictionary_1")
                     .number_of_rows(0)
                     .wordMap(wordList1.stream().collect(Collectors.toMap(Word::getId, word -> word)))
                     .build();
 
-        List<Map<UUID, Word>> wordListDictionary1 = List.of(dictionary1.getWordMap());
-        for (Map<UUID, Word> map : wordListDictionary1) {
-            for (Map.Entry<UUID, Word> pair : map.entrySet()) {
-                setAndIncRowNum(pair.getValue(), dictionary1);
+            List<Map<UUID, Word>> wordListDictionary1 = List.of(dictionary1.getWordMap());
+            for (Map<UUID, Word> map : wordListDictionary1) {
+                for (Map.Entry<UUID, Word> pair : map.entrySet()) {
+                    setAndIncRowNum(pair.getValue(), dictionary1);
+                }
             }
-        }
 
-        Dictionary dictionary2 = Dictionary.builder()
+            Dictionary dictionary2 = Dictionary.builder()
                     .id(UUID.randomUUID())
                     .name("Dictionary_2")
                     .number_of_rows(0)
                     .wordMap(wordList2.stream().collect(Collectors.toMap(Word::getId, word -> word)))
                     .build();
 
-        List<Map<UUID, Word>> wordListDictionary2 = List.of(dictionary2.getWordMap());
-        for (Map<UUID, Word> map : wordListDictionary2) {
-            for (Map.Entry<UUID, Word> pair : map.entrySet()) {
-                setAndIncRowNum(pair.getValue(), dictionary2);
+            List<Map<UUID, Word>> wordListDictionary2 = List.of(dictionary2.getWordMap());
+            for (Map<UUID, Word> map : wordListDictionary2) {
+                for (Map.Entry<UUID, Word> pair : map.entrySet()) {
+                    setAndIncRowNum(pair.getValue(), dictionary2);
+                }
             }
-        }
 
-        dictionaryRepository.save(dictionary1);
-        dictionaryRepository.save(dictionary2);
+            dictionaryRepository.save(dictionary1);
+            dictionaryRepository.save(dictionary2);
+        }
     }
 
 
     private void loadCsvData() throws FileNotFoundException {
 
-        File file = ResourceUtils.getFile("classpath:csvdata/data.csv");
+        if (dictionaryRepository.count() == 0) {
+            File file = ResourceUtils.getFile("classpath:csvdata/data.csv");
 
-        List<WordCSVRecord> records = wordCSVService.convertCSV(file);
+            List<WordCSVRecord> records = wordCSVService.convertCSV(file);
 
-        for (int i = 0; i < records.size(); i++) {
-            WordCSVRecord csvData = records.get(i);
-            if (i % 2 == 0) {
+            for (int i = 0; i < records.size(); i++) {
+                WordCSVRecord csvData = records.get(i);
+                if (i % 2 == 0) {
 
-                wordList1.add(Word.builder()
-                                    .id(UUID.randomUUID())
-                                    .translation(csvData.getTranslation())
-                                    .text(csvData.getText())
-                                    .build());
-            }
-            else {
+                    wordList1.add(Word.builder()
+                            .id(UUID.randomUUID())
+                            .translation(csvData.getTranslation())
+                            .text(csvData.getText())
+                            .build());
+                }
+                else {
 
-                wordList2.add(Word.builder()
-                                    .id(UUID.randomUUID())
-                                    .translation(csvData.getTranslation())
-                                    .text(csvData.getText())
-                                    .build());
+                    wordList2.add(Word.builder()
+                            .id(UUID.randomUUID())
+                            .translation(csvData.getTranslation())
+                            .text(csvData.getText())
+                            .build());
+                }
             }
         }
     }
