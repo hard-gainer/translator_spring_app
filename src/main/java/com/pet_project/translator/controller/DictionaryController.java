@@ -1,5 +1,6 @@
 package com.pet_project.translator.controller;
 
+import com.pet_project.translator.entities.Word;
 import com.pet_project.translator.models.DictionaryDTO;
 import com.pet_project.translator.models.WordDTO;
 import com.pet_project.translator.services.DictionaryService;
@@ -7,13 +8,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -62,9 +63,12 @@ public class DictionaryController {
     @PostMapping(DICTIONARY_PATH_ID)
     public ResponseEntity saveNewWord(@PathVariable UUID dictionaryId, @Valid @RequestBody WordDTO word) {
 
-        dictionaryService.saveNewWord(dictionaryId, word);
 
-        return new ResponseEntity(HttpStatus.CREATED);
+        Word savedWord = dictionaryService.saveNewWord(dictionaryId, word);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Location", DICTIONARY_PATH_ID + "/" + savedWord.getId().toString());
+
+        return new ResponseEntity(headers, HttpStatus.CREATED);
     }
 
     @GetMapping(DICTIONARY_PATH)
@@ -73,11 +77,13 @@ public class DictionaryController {
     }
 
     @GetMapping(DICTIONARY_PATH_ID)
-    public List<WordDTO> getDictionaryById(@PathVariable("dictionaryId") UUID dictionaryId) {
-        if (dictionaryService.getDictionaryById(dictionaryId).isEmpty())
+    public Optional<List<WordDTO>> getDictionaryById(@PathVariable("dictionaryId") UUID dictionaryId,
+                                                         @RequestParam(required = false) Integer pageNumber,
+                                                         @RequestParam(required = false) Integer pageSize) {
+        if (dictionaryService.getDictionaryById(dictionaryId, pageNumber, pageSize).isEmpty())
             throw new NotFoundException();
         else
-            return dictionaryService.getDictionaryById(dictionaryId);
+            return dictionaryService.getDictionaryById(dictionaryId, pageNumber, pageSize);
     }
 
 }

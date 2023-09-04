@@ -22,8 +22,12 @@ public class Word {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "id", length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
+    @Column(name = "word_id", length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "dictionary_id")
+    private Dictionary dictionary;
 
     private long rowNum;
 

@@ -10,7 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -27,7 +26,7 @@ class DictionaryControllerTest {
 
     @Test
     void getDictionaryByIdNotFound() throws Exception {
-        given(dictionaryService.getDictionaryById(any(UUID.class))).willThrow(NotFoundException.class);
+        given(dictionaryService.getDictionaryById(any(UUID.class), 0, 25)).willThrow(NotFoundException.class);
 
         mockMvc.perform(get("http://localhost:8080/api/v1/dictionary/" + UUID.randomUUID())).andExpect(status().isNotFound());
     }

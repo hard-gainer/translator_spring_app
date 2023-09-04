@@ -3,13 +3,14 @@ package com.pet_project.translator.models;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.util.UUID;
 
 @Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class WordDTO {
 
     private UUID id;
