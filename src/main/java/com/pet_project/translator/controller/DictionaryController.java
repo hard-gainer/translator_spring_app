@@ -27,7 +27,7 @@ public class DictionaryController {
 
     private final DictionaryService dictionaryService;
 
-    @PutMapping(value = DICTIONARY_PATH_ID)
+    @PutMapping(value = DICTIONARY_PATH)
     public ResponseEntity updateWordById(@PathVariable UUID dictionaryId, @Validated @RequestBody WordDTO word) {
 
         dictionaryService.updateWordById(dictionaryId, word);
@@ -78,8 +78,8 @@ public class DictionaryController {
 
     @GetMapping(DICTIONARY_PATH_ID)
     public Optional<List<WordDTO>> getDictionaryById(@PathVariable("dictionaryId") UUID dictionaryId,
-                                                         @RequestParam(required = false) Integer pageNumber,
-                                                         @RequestParam(required = false) Integer pageSize) {
+                                                     @RequestParam(required = false) Integer pageNumber,
+                                                     @RequestParam(required = false) Integer pageSize) {
         if (dictionaryService.getDictionaryById(dictionaryId, pageNumber, pageSize).isEmpty())
             throw new NotFoundException();
         else

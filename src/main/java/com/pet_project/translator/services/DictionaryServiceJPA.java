@@ -110,61 +110,38 @@ public class DictionaryServiceJPA implements DictionaryService {
             atomicReference.set(Optional.of(mapper.wordToWordDto(wordRepository.save(foundWord))));
         }, () -> atomicReference.set(Optional.empty()));
 
-        dictionaryRepository.findById(dictionaryId).ifPresentOrElse(foundDictionary -> {
-                    Word current_word = foundDictionary.getWordMap().get(word.getId());
-                    current_word.setText(word.getText());
-                    current_word.setTranslation(word.getTranslation());
-
-                    dictionaryRepository.save(foundDictionary);
-        }, () -> atomicReference.set(Optional.empty()));
-
         return atomicReference.get();
     }
 
     @Override
     public Boolean deleteWordById(UUID dictionaryId, UUID wordId) {
 
-        if (dictionaryRepository.existsById(dictionaryId)) {
-
-            dictionaryRepository.findById(dictionaryId).ifPresent(foundDictionary -> {
-                foundDictionary.getWordMap().remove(wordId);
-
-                foundDictionary.setNumber_of_rows(0);
-                Map<UUID, Word> map = foundDictionary.getWordMap();
-
-                for (var elem : map.values()) {
-                    elem.setRowNum(foundDictionary.getNumber_of_rows() + 1);
-                    foundDictionary.setNumber_of_rows(foundDictionary.getNumber_of_rows() + 1);
-                }
-
-                dictionaryRepository.save(foundDictionary);
-
-            });
-
-            if (wordRepository.existsById(wordId)){
-                wordRepository.deleteById(wordId);
-                return true;
-            }
-            else return false;
-
+        if (!dictionaryRepository.existsById(dictionaryId)) {
+            return false;
         }
-        else return false;
+
+        dictionaryRepository.findById(dictionaryId).ifPresent(foundDictionary -> {
+            foundDictionary.getWordMap().remove(wordId);
+            wordRepository.deleteById(wordId);
+
+            foundDictionary.setNumber_of_rows(0);
+            Map<UUID, Word> map = foundDictionary.getWordMap();
+
+            for (var elem : map.values()) {
+                elem.setRowNum(foundDictionary.getNumber_of_rows() + 1);
+                foundDictionary.setNumber_of_rows(foundDictionary.getNumber_of_rows() + 1);
+            }
+
+            dictionaryRepository.save(foundDictionary);
+        });
+
+        return true;
     }
 
     @Override
-    public Boolean deleteDictionaryById(UUID dictionaryId) {
+    public void deleteDictionaryById(UUID dictionaryId) {
 
-        if (wordRepository.existsAllByDictionary_Id(dictionaryId)) {
-            wordRepository.deleteAllByDictionary_Id(dictionaryId);
-
-            if (dictionaryRepository.existsById(dictionaryId))
-            {
-                dictionaryRepository.deleteById(dictionaryId);
-                return true;
-            }
-            else return false;
-        }
-        else return false;
+        dictionaryRepository.deleteById(dictionaryId);
     }
 
     @Override

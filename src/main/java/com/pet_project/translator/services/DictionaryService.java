@@ -11,10 +11,16 @@ import java.util.*;
 public interface DictionaryService {
 
     Word saveNewWord(UUID dictionaryId, WordDTO word);
+
     Optional<List<WordDTO>> getDictionaryById(UUID id, Integer pageNumber, Integer pageSize);
+
     Map<UUID, String> printAllDictionaries();
+
     Optional<WordDTO> updateWordById(UUID dictionaryId, WordDTO word);
+
     Boolean deleteWordById(UUID dictionaryId, UUID wordId);
-    Boolean deleteDictionaryById(UUID dictionaryId);
+
+    void deleteDictionaryById(UUID dictionaryId);
+
     DictionaryDTO saveNewDictionary(DictionaryDTO dictionary);
 }

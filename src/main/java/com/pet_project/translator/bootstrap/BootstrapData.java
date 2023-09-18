@@ -89,11 +89,11 @@ public class BootstrapData implements CommandLineRunner
             dictionaryRepository.save(dictionary1);
             dictionaryRepository.save(dictionary2);
 
-            System.out.println(wordList1.get(0).getDictionary().getId());
-            System.out.println(wordList2.get(0).getDictionary().getId());
-
-            wordRepository.saveAll(wordList1);
-            wordRepository.saveAll(wordList2);
+//            System.out.println(wordList1.get(0).getDictionary().getId());
+//            System.out.println(wordList2.get(0).getDictionary().getId());
+//
+//            wordRepository.saveAll(wordList1);
+//            wordRepository.saveAll(wordList2);
 
 //            for (Word word : wordList1)
 //                wordRepository.save(word);
