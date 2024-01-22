@@ -4,12 +4,9 @@ import com.pet_project.translator.entities.Dictionary;
 import com.pet_project.translator.entities.Word;
 import com.pet_project.translator.models.WordCSVRecord;
 import com.pet_project.translator.repositories.DictionaryRepository;
-import com.pet_project.translator.repositories.WordRepository;
-import com.pet_project.translator.services.DictionaryService;
 import com.pet_project.translator.services.WordCSVService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,19 +14,18 @@ import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BootstrapData implements CommandLineRunner
-{
+public class BootstrapData implements CommandLineRunner {
 
     private final DictionaryRepository dictionaryRepository;
-    private final WordRepository wordRepository;
-    private final DictionaryService dictionaryService;
     private final WordCSVService wordCSVService;
 
     private final List<Word> wordList1 = new ArrayList<>();
@@ -41,7 +37,6 @@ public class BootstrapData implements CommandLineRunner
     public void run(String... args) throws Exception {
         loadCsvData();
         loadDictionaryData();
-
     }
 
     private void loadDictionaryData() {
@@ -54,16 +49,9 @@ public class BootstrapData implements CommandLineRunner
                     .wordMap(wordList1.stream().collect(Collectors.toMap(Word::getId, word -> word)))
                     .build();
 
-            List<Map<UUID, Word>> wordListDictionary1 = List.of(dictionary1.getWordMap());
-            for (Map<UUID, Word> map : wordListDictionary1) {
-                for (Map.Entry<UUID, Word> pair : map.entrySet()) {
-                    setAndIncRowNum(pair.getValue(), dictionary1);
-//                    pair.getValue().setDictionary(dictionary1);
-                }
-            }
-
-            for (Word word : wordList1)
-                word.setDictionary(dictionary1);
+            loadWords(dictionary1);
+            wordList1.forEach(word -> word.setDictionary(dictionary1));
+            dictionaryRepository.save(dictionary1);
 
             Dictionary dictionary2 = Dictionary.builder()
                     .id(UUID.randomUUID())
@@ -72,32 +60,18 @@ public class BootstrapData implements CommandLineRunner
                     .wordMap(wordList2.stream().collect(Collectors.toMap(Word::getId, word -> word)))
                     .build();
 
-            List<Map<UUID, Word>> wordListDictionary2 = List.of(dictionary2.getWordMap());
-            for (Map<UUID, Word> map : wordListDictionary2) {
-                for (Map.Entry<UUID, Word> pair : map.entrySet()) {
-                    setAndIncRowNum(pair.getValue(), dictionary2);
-//                    pair.getValue().setDictionary(dictionary2);
-                }
-            }
-
-            for (Word word : wordList2)
-                word.setDictionary(dictionary2);
-
-            System.out.println(dictionary1.getId());
-            System.out.println(dictionary2.getId());
-
-            dictionaryRepository.save(dictionary1);
+            loadWords(dictionary2);
+            wordList2.forEach(word -> word.setDictionary(dictionary2));
             dictionaryRepository.save(dictionary2);
+        }
+    }
 
-//            System.out.println(wordList1.get(0).getDictionary().getId());
-//            System.out.println(wordList2.get(0).getDictionary().getId());
-//
-//            wordRepository.saveAll(wordList1);
-//            wordRepository.saveAll(wordList2);
-
-//            for (Word word : wordList1)
-//                wordRepository.save(word);
-
+    private void loadWords(Dictionary dictionary) {
+        List<Map<UUID, Word>> wordListDictionary = List.of(dictionary.getWordMap());
+        for (Map<UUID, Word> map : wordListDictionary) {
+            for (Map.Entry<UUID, Word> pair : map.entrySet()) {
+                setAndIncRowNum(pair.getValue(), dictionary);
+            }
         }
     }
 
@@ -118,8 +92,7 @@ public class BootstrapData implements CommandLineRunner
                             .translation(csvData.getTranslation())
                             .text(csvData.getText())
                             .build());
-                }
-                else {
+                } else {
 
                     wordList2.add(Word.builder()
                             .id(UUID.randomUUID())

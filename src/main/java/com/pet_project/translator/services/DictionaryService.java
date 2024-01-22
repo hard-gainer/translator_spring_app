@@ -1,26 +1,26 @@
 package com.pet_project.translator.services;
 
-import com.pet_project.translator.entities.Dictionary;
-import com.pet_project.translator.entities.Word;
 import com.pet_project.translator.models.DictionaryDTO;
+import com.pet_project.translator.models.TYPE;
 import com.pet_project.translator.models.WordDTO;
-import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface DictionaryService {
 
-    Word saveNewWord(UUID dictionaryId, WordDTO word);
+    WordDTO saveNewWord(UUID dictionaryId, WordDTO word);
 
-    Optional<List<WordDTO>> getDictionaryById(UUID id, Integer pageNumber, Integer pageSize);
+    Page<WordDTO> getDictionaryById(UUID id, Integer pageNumber, Integer pageSize);
 
-    Map<UUID, String> printAllDictionaries();
+    Page<DictionaryDTO> printAllDictionaries(Integer pageNumber, Integer pageSize);
 
     Optional<WordDTO> updateWordById(UUID dictionaryId, WordDTO word);
 
-    Boolean deleteWordById(UUID dictionaryId, UUID wordId);
+    Optional<TYPE> deleteWordById(UUID dictionaryId, UUID wordId);
 
-    void deleteDictionaryById(UUID dictionaryId);
+    Boolean deleteDictionaryById(UUID dictionaryId);
 
     DictionaryDTO saveNewDictionary(DictionaryDTO dictionary);
 }

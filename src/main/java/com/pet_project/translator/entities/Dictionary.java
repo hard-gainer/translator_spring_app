@@ -21,10 +21,10 @@ import java.util.UUID;
 public class Dictionary {
 
     @Id
-//    @GeneratedValue(generator = "UUID")
-//    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "dictionary_id",length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
+    @Column(name = "dictionary_id", length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
     @NotBlank
@@ -33,10 +33,8 @@ public class Dictionary {
 
     private long number_of_rows;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "dictionary_word_mapping",
-            joinColumns = { @JoinColumn(name = "dictionary_id", referencedColumnName = "dictionary_id") },
-            inverseJoinColumns = { @JoinColumn(name = "word_id", referencedColumnName = "word_id") })
+    // mappedBy очень важна, даёт понять, что хибернейту не нужно создавать доп таблицу mapping'а
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "dictionary")
     @MapKey(name = "id")
     private Map<UUID, Word> wordMap;
 }

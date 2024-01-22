@@ -1,19 +1,24 @@
 package com.pet_project.translator.services;
 
-import com.pet_project.translator.entities.Dictionary;
 import com.pet_project.translator.entities.Word;
 import com.pet_project.translator.mappers.DictionaryWordMapper;
 import com.pet_project.translator.models.DictionaryDTO;
+import com.pet_project.translator.models.TYPE;
 import com.pet_project.translator.models.WordDTO;
 import com.pet_project.translator.repositories.DictionaryRepository;
 import com.pet_project.translator.repositories.WordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -30,7 +35,7 @@ public class DictionaryServiceJPA implements DictionaryService {
     private static final int DEFAULT_PAGE_SIZE = 25;
 
     @Override
-    public Word saveNewWord(UUID dictionaryId, WordDTO word) {
+    public WordDTO saveNewWord(UUID dictionaryId, WordDTO word) {
 
         AtomicReference<Word> returnWord = new AtomicReference<>();
 
@@ -51,22 +56,24 @@ public class DictionaryServiceJPA implements DictionaryService {
             returnWord.set(newWord);
 //            wordRepository.save(newWord);
         });
-        return returnWord.get();
+        return mapper.wordToWordDto(returnWord.get());
     }
 
     @Override
-    public Optional<List<WordDTO>> getDictionaryById(UUID id, Integer pageNumber, Integer pageSize) {
+    public Page<WordDTO> getDictionaryById(UUID id, Integer pageNumber, Integer pageSize) {
 
-        PageRequest pageRequest = buildPageRequest(pageNumber, pageSize);
-        List<Word> list = wordRepository.findAllByDictionary_Id(id, pageRequest);
-        List<WordDTO> print_list = new ArrayList<>();
+        PageRequest pageRequest = buildPageRequest(pageNumber, pageSize, TYPE.WORD);
+        Page<Word> wordList = wordRepository.findAllByDictionary_Id(id, pageRequest);
 
-        list.forEach(word -> print_list.add(mapper.wordToWordDto(word)));
+        if (wordList.isEmpty())
+            return Page.empty();
 
-        return Optional.of(print_list);
+        return new PageImpl<>(wordList.stream()
+                .map(mapper::wordToWordDto)
+                .collect(Collectors.toList()));
     }
 
-    private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
+    private PageRequest buildPageRequest(Integer pageNumber, Integer pageSize, TYPE type) {
         int queryPageNumber;
         int queryPageSize;
 
@@ -86,16 +93,26 @@ public class DictionaryServiceJPA implements DictionaryService {
             }
         }
 
-        return PageRequest.of(queryPageNumber, queryPageSize, Sort.by(Sort.Direction.ASC, "rowNum"));
+        PageRequest pageRequest;
+        switch (type) {
+            case WORD -> pageRequest = PageRequest.of(queryPageNumber, queryPageSize,
+                    Sort.by(Sort.Direction.ASC, "rowNum"));
+            case DICT -> pageRequest = PageRequest.of(queryPageNumber, queryPageSize,
+                    Sort.by(Sort.Direction.ASC, "name"));
+            default -> pageRequest = PageRequest.of(queryPageNumber, queryPageSize);
+        }
+        return pageRequest;
     }
 
 
     @Override
-    public Map<UUID, String> printAllDictionaries() {
+    public Page<DictionaryDTO> printAllDictionaries(Integer pageNumber, Integer pageSize) {
 
-        return dictionaryRepository.findAll()
-                .stream()
-                .collect(Collectors.toMap(Dictionary::getId, Dictionary::getName));
+        PageRequest pageRequest = buildPageRequest(pageNumber, pageSize, TYPE.DICT);
+
+        return new PageImpl<>(dictionaryRepository.findAll(pageRequest).stream()
+                .map(mapper::dictionaryToDictionaryDTO)
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -114,13 +131,14 @@ public class DictionaryServiceJPA implements DictionaryService {
     }
 
     @Override
-    public Boolean deleteWordById(UUID dictionaryId, UUID wordId) {
+    public Optional<TYPE> deleteWordById(UUID dictionaryId, UUID wordId) {
 
+        AtomicReference<Optional<TYPE>> flag = new AtomicReference<>();
         if (!dictionaryRepository.existsById(dictionaryId)) {
-            return false;
+            return Optional.of(TYPE.DICT);
         }
 
-        dictionaryRepository.findById(dictionaryId).ifPresent(foundDictionary -> {
+        dictionaryRepository.findById(dictionaryId).ifPresentOrElse(foundDictionary -> {
             foundDictionary.getWordMap().remove(wordId);
             wordRepository.deleteById(wordId);
 
@@ -133,15 +151,20 @@ public class DictionaryServiceJPA implements DictionaryService {
             }
 
             dictionaryRepository.save(foundDictionary);
-        });
+            flag.set(Optional.empty());
+        }, () -> flag.set(Optional.of(TYPE.WORD)));
 
-        return true;
+        return flag.get();
     }
 
     @Override
-    public void deleteDictionaryById(UUID dictionaryId) {
+    public Boolean deleteDictionaryById(UUID dictionaryId) {
 
-        dictionaryRepository.deleteById(dictionaryId);
+        if (dictionaryRepository.existsById(dictionaryId)) {
+            dictionaryRepository.deleteById(dictionaryId);
+            return true;
+        }
+        return false;
     }
 
     @Override

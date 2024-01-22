@@ -1,7 +1,6 @@
 package com.pet_project.translator.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -25,7 +24,7 @@ public class Word {
     @Column(name = "word_id", length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dictionary_id")
     private Dictionary dictionary;
 
